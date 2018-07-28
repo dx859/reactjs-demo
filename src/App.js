@@ -1,15 +1,17 @@
-import React, { Component } from 'react';
-import { Button } from 'antd'
-import './App.less';
+import React, {Component} from 'react';
+import {BrowserRouter, Route} from "react-router-dom";
+import Home from "./container/Home";
 
 class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <Button type="primary">Primary</Button>
-      </div>
-    );
-  }
+    render() {
+        return (
+            <BrowserRouter>
+                <div>
+                    <Route exact path="/" component={Home}/>
+                </div>
+            </BrowserRouter>
+        );
+    }
 }
 
 export default App;

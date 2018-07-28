@@ -12,7 +12,6 @@ const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const paths = require('./paths');
 const getClientEnvironment = require('./env');
-const lessConf = require('../lessConf');
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // It requires a trailing slash, or the file assets will get an incorrect path.
@@ -47,23 +46,58 @@ const extractTextPluginOptions = shouldUseRelativeAssetPaths
     { publicPath: Array(cssFilename.split('/').length).join('../') }
   : {};
 
-const postcss = {
-  loader: 'postcss-loader',
-  options: {
-    plugins: () => ([
-      require('postcss-flexbugs-fixes'),
-      require('autoprefixer')({
-        //https://github.com/ai/browserslist
-        browsers: [
-          '>1%',
-          'last 4 versions',
-          'Firefox ESR',
-          'not ie < 9' // React doesn't support IE8 anyway
-        ]
-      })
-    ])
-  }
+
+const cssConfig = {
+  fallback: {
+    loader: require.resolve('style-loader'),
+    options: {
+      hmr: false,
+    },
+  },
+  use: [
+    {
+      loader: require.resolve('css-loader'),
+      options: {
+        importLoaders: 1,
+        minimize: true,
+        sourceMap: shouldUseSourceMap,
+      },
+    },
+    {
+      loader: require.resolve('postcss-loader'),
+      options: {
+        // Necessary for external CSS imports to work
+        // https://github.com/facebookincubator/create-react-app/issues/2677
+        ident: 'postcss',
+        plugins: () => [
+          require('postcss-flexbugs-fixes'),
+          autoprefixer({
+            browsers: [
+              '>1%',
+              'last 4 versions',
+              'Firefox ESR',
+              'not ie < 9', // React doesn't support IE8 anyway
+            ],
+            flexbox: 'no-2009',
+          }),
+        ],
+      },
+    },
+  ],
 };
+const cssModuleConfig = JSON.parse(JSON.stringify(cssConfig));
+const lessConfig = JSON.parse(JSON.stringify(cssConfig));
+cssModuleConfig.use[0].options.modules = true;
+lessConfig.use.push({
+  loader: 'less-loader',
+  options: {
+    javascriptEnabled: true,
+    modifyVars: require('../src/theme/modifyVars')
+  }
+});
+const lessModuleConfig = JSON.parse(JSON.stringify(lessConfig));
+lessModuleConfig.use[0].options.modules = true;
+
 // This is the production configuration.
 // It compiles slowly and is focused on producing a fast and minimal bundle.
 // The development configuration is different and lives in a separate file.
@@ -170,7 +204,7 @@ module.exports = {
               
               compact: true,
               plugins: [
-                ["import", { "libraryName": "antd", "style": true }]
+                ["import", {"libraryName": "antd", "libraryDirectory ":"es", "style": true}]
               ]
             },
           },
@@ -188,46 +222,22 @@ module.exports = {
           // in the main CSS file.
           {
             test: /\.css$/,
+            exclude: paths.appSrc,
             loader: ExtractTextPlugin.extract(
               Object.assign(
-                {
-                  fallback: {
-                    loader: require.resolve('style-loader'),
-                    options: {
-                      hmr: false,
-                    },
-                  },
-                  use: [
-                    {
-                      loader: require.resolve('css-loader'),
-                      options: {
-                        importLoaders: 1,
-                        minimize: true,
-                        sourceMap: shouldUseSourceMap,
-                      },
-                    },
-                    {
-                      loader: require.resolve('postcss-loader'),
-                      options: {
-                        // Necessary for external CSS imports to work
-                        // https://github.com/facebookincubator/create-react-app/issues/2677
-                        ident: 'postcss',
-                        plugins: () => [
-                          require('postcss-flexbugs-fixes'),
-                          autoprefixer({
-                            browsers: [
-                              '>1%',
-                              'last 4 versions',
-                              'Firefox ESR',
-                              'not ie < 9', // React doesn't support IE8 anyway
-                            ],
-                            flexbox: 'no-2009',
-                          }),
-                        ],
-                      },
-                    },
-                  ],
-                },
+                cssConfig,
+                {use: cssConfig.use},
+                extractTextPluginOptions
+              )
+            ),
+            // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
+          },
+          {
+            test: /\.css$/,
+            include: paths.appSrc,
+            loader: ExtractTextPlugin.extract(
+              Object.assign(
+                cssModuleConfig,
                 extractTextPluginOptions
               )
             ),
@@ -238,50 +248,7 @@ module.exports = {
             exclude: paths.appSrc,
             loader: ExtractTextPlugin.extract(
               Object.assign(
-                {
-                  fallback: {
-                    loader: require.resolve('style-loader'),
-                    options: {
-                      hmr: false,
-                    },
-                  },
-                  use: [
-                    {
-                      loader: require.resolve('css-loader'),
-                      options: {
-                        importLoaders: 1,
-                        minimize: true,
-                        sourceMap: shouldUseSourceMap,
-                      },
-                    },
-                    {
-                      loader: require.resolve('postcss-loader'),
-                      options: {
-                        // Necessary for external CSS imports to work
-                        // https://github.com/facebookincubator/create-react-app/issues/2677
-                        ident: 'postcss',
-                        plugins: () => [
-                          require('postcss-flexbugs-fixes'),
-                          autoprefixer({
-                            browsers: [
-                              '>1%',
-                              'last 4 versions',
-                              'Firefox ESR',
-                              'not ie < 9', // React doesn't support IE8 anyway
-                            ],
-                            flexbox: 'no-2009',
-                          }),
-                        ],
-                      },
-                    },
-                    {
-                      loader:'less-loader',
-                      options: {
-                        modifyVars: lessConf.antdModifyVars
-                      }
-                    }
-                  ],
-                },
+                lessConfig,
                 extractTextPluginOptions
               )
             ),
@@ -292,51 +259,7 @@ module.exports = {
             include: paths.appSrc,
             loader: ExtractTextPlugin.extract(
               Object.assign(
-                {
-                  fallback: {
-                    loader: require.resolve('style-loader'),
-                    options: {
-                      hmr: false,
-                    },
-                  },
-                  use: [
-                    {
-                      loader: require.resolve('css-loader'),
-                      options: {
-                        importLoaders: 1,
-                        minimize: true,
-                        sourceMap: shouldUseSourceMap,
-                      },
-                    },
-                    {
-                      loader: require.resolve('postcss-loader'),
-                      options: {
-                        // Necessary for external CSS imports to work
-                        // https://github.com/facebookincubator/create-react-app/issues/2677
-                        ident: 'postcss',
-                        plugins: () => [
-                          require('postcss-flexbugs-fixes'),
-                          autoprefixer({
-                            browsers: [
-                              '>1%',
-                              'last 4 versions',
-                              'Firefox ESR',
-                              'not ie < 9', // React doesn't support IE8 anyway
-                            ],
-                            flexbox: 'no-2009',
-                          }),
-                        ],
-                      },
-                    },
-                    {
-                      loader:'less-loader',
-                      options: {
-                        modifyVars: lessConf.modifyVars,
-                        globalVars: lessConf.globalVars
-                      }
-                    }
-                  ],
-                },
+                lessModuleConfig,
                 extractTextPluginOptions
               )
             ),
@@ -352,7 +275,7 @@ module.exports = {
             // it's runtime that would otherwise processed through "file" loader.
             // Also exclude `html` and `json` extensions so they get processed
             // by webpacks internal loaders.
-            exclude: [/\.js$/, /\.html$/, /\.json$/],
+            exclude: [/\.(js|jsx|mjs)$/, /\.html$/, /\.json$/],
             options: {
               name: 'static/media/[name].[hash:8].[ext]',
             },
@@ -404,7 +327,7 @@ module.exports = {
       },
       mangle: {
         safari10: true,
-      },        
+      },
       output: {
         comments: false,
         // Turned on because emoji and regex is not minified properly using default

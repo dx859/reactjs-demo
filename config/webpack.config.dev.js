@@ -11,9 +11,9 @@ const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
-const lessConf = require('../lessConf');
+
 // Webpack uses `publicPath` to determine where the app is being served from.
-// In development, we always serve from the root. This makes config easier.
+// In development, we always serve from the root. This makes data easier.
 const publicPath = '/';
 // `publicUrl` is just like `publicPath`, but we will provide it to our app
 // as %PUBLIC_URL% in `index.html` and `process.env.PUBLIC_URL` in JavaScript.
@@ -22,22 +22,45 @@ const publicUrl = '';
 // Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
 
-
-const postcss = {
-  loader: 'postcss-loader',
+const cssLoader =  {
+  loader: require.resolve('css-loader'),
   options: {
-    plugins: () => ([
-      require('postcss-flexbugs-fixes'),
-      require('autoprefixer')({
-        //https://github.com/ai/browserslist
-        browsers: [
-          '>1%',
-          'last 4 versions',
-          'Firefox ESR',
-          'not ie < 9' // React doesn't support IE8 anyway
-        ]
-      })
-    ])
+    importLoaders: 1,
+  }
+};
+const cssModuleLoader = {
+  loader: require.resolve('css-loader'),
+  options: {
+    importLoaders: 1,
+    modules: true,
+    localIdentName: "[name]_[local]_[hash:base64:5]"
+  },
+};
+const postcssLoader =  {
+    loader: require.resolve('postcss-loader'),
+    options: {
+      // Necessary for external CSS imports to work
+      // https://github.com/facebookincubator/create-react-app/issues/2677
+      ident: 'postcss',
+      plugins: () => [
+        require('postcss-flexbugs-fixes'),
+        autoprefixer({
+          browsers: [
+            '>1%',
+            'last 4 versions',
+            'Firefox ESR',
+            'not ie < 9', // React doesn't support IE8 anyway
+          ],
+          flexbox: 'no-2009',
+        }),
+      ],
+    },
+  };
+const lessLoader = {
+  loader: 'less-loader',
+  options: {
+    javascriptEnabled: true,
+    modifyVars: require('../src/theme/modifyVars')
   }
 };
 
@@ -52,7 +75,6 @@ module.exports = {
   // This means they will be the "root" imports that are included in JS bundle.
   // The first two entry points enable "hot" CSS and auto-refreshes for JS.
   entry: [
-    'react-hot-loader/patch',
     // We ship a few polyfills by default:
     require.resolve('./polyfills'),
     // Include an alternative client for WebpackDevServer. A client's job is to
@@ -104,7 +126,7 @@ module.exports = {
     // for React Native Web.
     extensions: ['.web.js', '.mjs', '.js', '.json', '.web.jsx', '.jsx'],
     alias: {
-      
+
       // Support React Native Web
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
       'react-native': 'react-native-web',
@@ -135,7 +157,7 @@ module.exports = {
             options: {
               formatter: eslintFormatter,
               eslintPath: require.resolve('eslint'),
-              
+
             },
             loader: require.resolve('eslint-loader'),
           },
@@ -164,14 +186,13 @@ module.exports = {
             include: paths.appSrc,
             loader: require.resolve('babel-loader'),
             options: {
-              
+
               // This is a feature of `babel-loader` for webpack (not Babel itself).
               // It enables caching results in ./node_modules/.cache/babel-loader/
               // directory for faster rebuilds.
               cacheDirectory: true,
               plugins: [
-                'react-hot-loader/babel',
-                ["import", { "libraryName": "antd", "style": true }]
+                ["import", {"libraryName": "antd", "libraryDirectory ":"es", "style": true}]
               ]
             },
           },
@@ -182,34 +203,20 @@ module.exports = {
           // in development "style" loader enables hot editing of CSS.
           {
             test: /\.css$/,
+            exclude: paths.appSrc,
             use: [
               require.resolve('style-loader'),
-              {
-                loader: require.resolve('css-loader'),
-                options: {
-                  importLoaders: 1,
-                },
-              },
-              {
-                loader: require.resolve('postcss-loader'),
-                options: {
-                  // Necessary for external CSS imports to work
-                  // https://github.com/facebookincubator/create-react-app/issues/2677
-                  ident: 'postcss',
-                  plugins: () => [
-                    require('postcss-flexbugs-fixes'),
-                    autoprefixer({
-                      browsers: [
-                        '>1%',
-                        'last 4 versions',
-                        'Firefox ESR',
-                        'not ie < 9', // React doesn't support IE8 anyway
-                      ],
-                      flexbox: 'no-2009',
-                    }),
-                  ],
-                },
-              },
+              cssLoader,
+              postcssLoader
+            ],
+          },
+          {
+            test: /\.css$/,
+            include: paths.appSrc,
+            use: [
+              require.resolve('style-loader'),
+              cssModuleLoader,
+              postcssLoader
             ],
           },
           {
@@ -217,40 +224,19 @@ module.exports = {
             exclude: paths.appSrc,
             use: [
               'style-loader',
-              {
-                loader: 'css-loader',
-                options: {
-                  importLoaders: 1
-                }
-              },
-              postcss,
-              {
-                loader:'less-loader',
-                options: {
-                  modifyVars: lessConf.antdModifyVars
-                }
-              }
+              cssLoader,
+              postcssLoader,
+              lessLoader,
             ]
           },
           {
             test: /\.less$/,
-            include:paths.appSrc,
+            include: paths.appSrc,
             use: [
               'style-loader',
-              {
-                loader: 'css-loader',
-                options: {
-                  importLoaders: 1
-                }
-              },
-              postcss,
-              {
-                loader:'less-loader',
-                options: {
-                  modifyVars: lessConf.modifyVars,
-                  globalVars: lessConf.globalVars
-                }
-              }
+              cssModuleLoader,
+              postcssLoader,
+              lessLoader,
             ]
           },
           // "file" loader makes sure those assets get served by WebpackDevServer.
@@ -260,10 +246,10 @@ module.exports = {
           // that fall through the other loaders.
           {
             // Exclude `js` files to keep "css" loader working as it injects
-            // it's runtime that would otherwise processed through "file" loader.
+            // its runtime that would otherwise processed through "file" loader.
             // Also exclude `html` and `json` extensions so they get processed
             // by webpacks internal loaders.
-            exclude: [/\.js$/, /\.html$/, /\.json$/],
+            exclude: [/\.(js|jsx|mjs)$/, /\.html$/, /\.json$/],
             loader: require.resolve('file-loader'),
             options: {
               name: 'static/media/[name].[hash:8].[ext]',

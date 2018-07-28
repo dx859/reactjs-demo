@@ -2,7 +2,7 @@
 
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
-const path = require('path');
+const ignoredFiles = require('react-dev-utils/ignoredFiles');
 const config = require('./webpack.config.dev');
 const paths = require('./paths');
 
@@ -58,7 +58,7 @@ module.exports = function(proxy, allowedHost) {
     // to CSS are currently hot reloaded. JS changes will refresh the browser.
     hot: true,
     // It is important to tell WebpackDevServer to use the same "root" path
-    // as we specified in the config. In development, we always serve from /.
+    // as we specified in the data. In development, we always serve from /.
     publicPath: config.output.publicPath,
     // WebpackDevServer is noisy by default so we emit custom message instead
     // by listening to the compiler events with `compiler.plugin` calls above.
@@ -68,12 +68,7 @@ module.exports = function(proxy, allowedHost) {
     // src/node_modules is not ignored to support absolute imports
     // https://github.com/facebookincubator/create-react-app/issues/1065
     watchOptions: {
-      ignored: new RegExp(
-        `^(?!${path
-          .normalize(paths.appSrc + '/')
-          .replace(/[\\]+/g, '\\\\')}).+[\\\\/]node_modules[\\\\/]`,
-        'g'
-      ),
+      ignored: ignoredFiles(paths.appSrc),
     },
     // Enable HTTPS if the HTTPS environment variable is set to 'true'
     https: protocol === 'https',
