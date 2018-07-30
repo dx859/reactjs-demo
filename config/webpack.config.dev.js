@@ -192,6 +192,7 @@ module.exports = {
               // directory for faster rebuilds.
               cacheDirectory: true,
               plugins: [
+                ['react-hot-loader/babel'],
                 ["import", {"libraryName": "antd", "libraryDirectory ":"es", "style": true}]
               ]
             },
