@@ -1,0 +1,22 @@
+.scene {
+    width: 600px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    background: darkgray;
+}
+
+.block {
+    background: gray;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.hero {
+    height: 100px;
+}
+
+.enemy {
+    flex: 1;
+}

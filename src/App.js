@@ -1,17 +1,18 @@
 import React, {Component} from 'react';
 import {BrowserRouter, Route} from "react-router-dom";
-import Home from "./container/Home";
+import {hot} from 'react-hot-loader';
+import GameBlock from "./container/GameBlock";
 
 class App extends Component {
-    render() {
-        return (
-            <BrowserRouter>
-                <div>
-                    <Route exact path="/" component={Home}/>
-                </div>
-            </BrowserRouter>
-        );
-    }
+  render() {
+    return (
+      <BrowserRouter>
+        <div>
+          <Route exact path="/" component={GameBlock}/>
+        </div>
+      </BrowserRouter>
+    );
+  }
 }
 
-export default App;
+export default hot(module)(App);
