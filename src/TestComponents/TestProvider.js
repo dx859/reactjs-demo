@@ -1,17 +1,16 @@
 import React, {Component, createContext} from 'react';
-
-export const ThemeColorChangedBits = 0b10;
-export const ThemeCountChangedBits = 0b01;
+import {inputArray} from './TestInputKeys';
 
 export const {Provider, Consumer} = createContext(null, (prev, next) => {
   let result = 0;
-  if (prev.input !== next.input) {
-    result |= ThemeColorChangedBits;
-  }
-  if (prev.theme !== next.theme) {
-    result |= ThemeCountChangedBits;
-  }
 
+  inputArray.forEach((input,i)=>{
+    if (prev[input] !== next[input]) {
+      
+      result |= (i+1);
+    }
+  })
+  console.log(result)
   return result;
 })
 
@@ -19,9 +18,12 @@ class TestProvider extends Component {
 
   constructor(props) {
     super(props);
+    let inputs = {};
+    inputArray.forEach(input=>{
+      inputs[input] = '';
+    })
     this.state = {
-      theme: 'red',
-      input: '',
+      ...inputs,
       onChange: this.onChange,
       switchTheme: this.switchTheme,
     }
