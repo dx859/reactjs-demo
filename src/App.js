@@ -1,15 +1,12 @@
 import React, { Component } from 'react';
-import TestFragment from "./TestComponents/TestFragment";
-import TestProvider from "./TestComponents/TestProvider";
+import Drag from "./Drag";
 
 
 class App extends Component {
   render() {
     return (
       <div className="App">
-        <TestProvider>
-          <TestFragment/>
-        </TestProvider>
+        <Drag/>
       </div>
     );
   }

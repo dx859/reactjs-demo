@@ -1,0 +1,13 @@
+:local {
+  .box {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    border: 1px solid #eeeeee;
+  }
+
+  .hover {
+    background-color: #eeeeee;
+    border-color: green;
+  }
+}
