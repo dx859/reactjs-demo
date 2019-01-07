@@ -1,1 +1,0 @@
-export const inputArray = ["input1","input2","input3","input4","input5","input6","input7","input8","input9","input10","input11","input12","input13",]
