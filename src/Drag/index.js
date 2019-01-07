@@ -25,7 +25,7 @@ class Drag extends Component {
 
   setSort = (dragIndex, moveIndex) => {
     let list = this.state.list;
-    list.splice(moveIndex,0, ...list.slice(dragIndex,1));
+    list.splice(moveIndex,0, list[dragIndex]);
     if (dragIndex >= moveIndex) {
       list.splice(dragIndex+1,1)
     } else {

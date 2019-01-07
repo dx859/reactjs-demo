@@ -25,16 +25,22 @@ class DragItem extends Component {
     this.setState({rightHover: false})
   }
 
-  onDragEnter = (e) =>{
+  onDragOver = (e) =>{
     console.log('enter')
     e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    this.setState({rightHover: true})
+   
   }
 
   onDragLeave = (e) => {
+    e.preventDefault();
     console.log('leave')
     this.setState({rightHover: false})
+  }
+
+  onDragEnter = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    this.setState({rightHover: true})
   }
 
   onDragEnd = (e) => {
@@ -55,16 +61,17 @@ class DragItem extends Component {
     return (
       <div
         draggable
-        onDragEnd ={this.onDragEnd}
+        // onDragEnd ={this.onDragEnd}
         onDrop={this.onDrop}
         onDragLeave={this.onDragLeave}
-        onDragEnter={this.onDragEnter}
+        onDragOver={this.onDragOver}
         onDragStart={this.onDragStart}
         className={className}>
         {this.props.item.text}
       </div>
     );
   }
-}
+}      
+           
 
 export default DragItem;
